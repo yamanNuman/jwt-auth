@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/errorHandler";
 import catchErrors from "./utils/catchErrors";
 import { OK } from "./constants/http";
+import authRoutes from "./routes/auth.route";
 
 const app = express();
 
@@ -23,10 +24,23 @@ app.get('/', catchErrors(async (req,res) => {
     res.status(OK).send({msg : "healty"});
 }));
 
+//Routes
+app.use('/auth', authRoutes);
+
 //Error Handler Middleware
 app.use(errorHandler);
 
-app.listen(PORT, async () => {
-    console.log(`Server is running PORT : ${PORT} in ${NODE_ENV} environment`);
-    await connectToDatabase();
-});
+const startServer = async () => {
+    try {
+        await connectToDatabase();
+
+        app.listen(PORT, () => {
+            console.log(`Server is running on PORT ${PORT} in ${NODE_ENV} environment.`);
+        });
+    } catch (error) {
+        console.error('Failed to start server', error);
+        process.exit(1);
+    }
+};
+
+startServer();
