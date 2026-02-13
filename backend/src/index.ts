@@ -33,7 +33,6 @@ app.use(errorHandler);
 const startServer = async () => {
     try {
         await connectToDatabase();
-
         app.listen(PORT, () => {
             console.log(`Server is running on PORT ${PORT} in ${NODE_ENV} environment.`);
         });
