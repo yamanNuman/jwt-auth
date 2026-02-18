@@ -5,8 +5,8 @@ import VerificationCodeModel from "../models/verificationCode.model";
 import { oneYearFromNow } from "../utils/date";
 import { JWT_REFRESH_TOKEN, JWT_SECRET } from "../constants/env";
 import jwt from "jsonwebtoken";
-import appAssert from "../utils/appAssert";
 import { CONFLICT } from "../constants/http";
+import appAssert from "../utils/appAssert";
 
 export type CreateAccountParams = {
     email: string,
@@ -62,7 +62,7 @@ export const createAccount =  async (data: CreateAccountParams) => {
     )
     //return user & tokens
     return {
-        user,
+        user: user.omitPassword(),
         accessToken,
         refreshToken
     }
