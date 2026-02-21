@@ -10,12 +10,12 @@ const defaults: CookieOptions = {
     secure
 }
 
-const getAccesTokenCookieOptions = (): CookieOptions => ({
+export const getAccesTokenCookieOptions = (): CookieOptions => ({
     ...defaults,
     expires: fifteenMinutesFromNow()
 });
 
-const getRefreshCookieOptions = (): CookieOptions => ({
+export const getRefreshTokenCookieOptions = (): CookieOptions => ({
     ...defaults,
     expires: thirtyDaysFromNow(),
     path: REFRESH_PATH
@@ -30,7 +30,7 @@ type Params = {
 export const setAuthCookies =  ({res, accessToken, refreshToken}: Params ) =>
     res
     .cookie("accessToken", accessToken, getAccesTokenCookieOptions())
-    .cookie("refreshToken", refreshToken, getRefreshCookieOptions());
+    .cookie("refreshToken", refreshToken, getRefreshTokenCookieOptions());
 
 export const clearAuthCookies = (res: Response) =>
     res.clearCookie("accessToken").clearCookie("refreshToken", {
