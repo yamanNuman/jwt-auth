@@ -3,9 +3,12 @@ import SessionModel from "../models/session.mode";
 import UserModel from "../models/user.model";
 import VerificationCodeModel from "../models/verificationCode.model";
 import { ONE_DAY_MS, oneYearFromNow, thirtyDaysFromNow } from "../utils/date";
-import { CONFLICT, UNAUTHORIZED } from "../constants/http";
+import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, UNAUTHORIZED } from "../constants/http";
 import appAssert from "../utils/appAssert";
 import { RefreshTokenPayload, refreshTokenSignOptions, signToken, verifyToken } from "../utils/jwt";
+import { getVerifyEmailTemplate } from "../utils/emailTemplates";
+import { APP_ORIGIN } from "../constants/env";
+import { sendMail } from "../utils/sendMail";
 
 export type CreateAccountParams = {
     email: string,
@@ -34,7 +37,18 @@ export const createAccount =  async (data: CreateAccountParams) => {
         type: VerificationCodeType.EmailVerification,
         expiresAt: oneYearFromNow()
     });
+
+    const url = `${APP_ORIGIN}/email/verify/${verificationCode._id}`;
     //send verification email
+    const {
+        error
+    } = await sendMail({
+        to: user.email,
+        ...getVerifyEmailTemplate(url)
+    });
+    if(error) {
+        console.log(error);
+    }
 
     //create session
     const session = await SessionModel.create({
@@ -125,3 +139,34 @@ export const refreshUserAccessToken = async (refreshToken: string) => {
         newRefreshToken
     }
 } 
+
+export const verifyEmail = async (code: string) => {
+    //get the verification code
+    const validCode = await VerificationCodeModel.findOne({
+        _id: code,
+        type: VerificationCodeType.EmailVerification,
+        expiresAt: { $gt: new Date()}
+    });
+    appAssert(validCode, NOT_FOUND, "Invalid or expired verification code");
+
+    //update user to verified true
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+        validCode.userId,
+        {
+            verified: true,
+        },
+        { new: true }
+    );
+    appAssert(updatedUser, INTERNAL_SERVER_ERROR, "Failed to verify email");
+
+    //delete verification code
+
+    await validCode.deleteOne();
+
+    //return user
+
+    return {
+        user: updatedUser.omitPassword()
+    };
+}
