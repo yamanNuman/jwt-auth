@@ -18,3 +18,8 @@ export const registerSchema = loginSchema.extend({
 });
 
 export const verificationCodeSchema = z.string().min(1).max(24)
+
+export const resetPasswordSchema = z.object({
+    password: passwordSchema,
+    verificationCode: verificationCodeSchema
+});

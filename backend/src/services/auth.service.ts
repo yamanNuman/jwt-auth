@@ -9,6 +9,7 @@ import { RefreshTokenPayload, refreshTokenSignOptions, signToken, verifyToken } 
 import { getPasswordResetTemplate, getVerifyEmailTemplate } from "../utils/emailTemplates";
 import { APP_ORIGIN } from "../constants/env";
 import { sendMail } from "../utils/sendMail";
+import { hashValue } from "../utils/bcrypt";
 
 export type CreateAccountParams = {
     email: string,
@@ -81,7 +82,7 @@ export const loginUser = async ({email, password, userAgent}: LoginParams) => {
     appAssert(user, UNAUTHORIZED, "Invalid email or password");
 
     //validate password from the request
-    const isValid = user.comparePassword(password);
+    const isValid = await user.comparePassword(password);
     appAssert(isValid, UNAUTHORIZED, "Invalid email or password");
     const userId = user._id;
     
@@ -205,5 +206,41 @@ export const sendPasswordResetEmail = async (email: string) => {
     return {
         url,
         emailId: data.id
+    }
+}
+
+type ResetPasswordParams = {
+    password:string,
+    verificationCode:string
+};
+
+export const resetPassword = async (
+    {password, verificationCode}: ResetPasswordParams
+) => {
+    //get the verification code
+    const validCode = await VerificationCodeModel.findOne({
+        _id: verificationCode,
+        type: VerificationCodeType.PasswordReset,
+        expiresAt: {$gt: new Date()}
+    });
+    appAssert(validCode, NOT_FOUND, "Invalid or expired verification code");
+
+    //update the users password
+    const updateUser = await UserModel.findByIdAndUpdate(
+        validCode.userId,
+        {
+            password: await hashValue(password)
+        })
+    appAssert(updateUser, INTERNAL_SERVER_ERROR, "Failed to reset password");
+    //delete the verification code 
+    await validCode.deleteOne();
+
+    //deleta all sessions
+    await SessionModel.deleteMany({
+        userId: updateUser._id
+    });
+
+    return {
+        user: updateUser.omitPassword()
     }
 }
