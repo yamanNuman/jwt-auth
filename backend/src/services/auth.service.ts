@@ -1,5 +1,5 @@
 import VerificationCodeType from "../constants/verificationCodeType";
-import SessionModel from "../models/session.mode";
+import SessionModel from "../models/session.model";
 import UserModel from "../models/user.model";
 import VerificationCodeModel from "../models/verificationCode.model";
 import { fiveMinutesAgo, ONE_DAY_MS, oneHourFromNow, oneYearFromNow, thirtyDaysFromNow } from "../utils/date";

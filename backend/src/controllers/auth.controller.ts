@@ -4,7 +4,7 @@ import { CREATED, OK, UNAUTHORIZED } from "../constants/http";
 import { clearAuthCookies, getAccesTokenCookieOptions, getRefreshTokenCookieOptions, setAuthCookies } from "../utils/cookies";
 import { emailSchema, loginSchema, registerSchema, resetPasswordSchema, verificationCodeSchema } from "./auth.schemas";
 import { verifyToken } from "../utils/jwt";
-import SessionModel from "../models/session.mode";
+import SessionModel from "../models/session.model";
 import appAssert from "../utils/appAssert";
 
 
